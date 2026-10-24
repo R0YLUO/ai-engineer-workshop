@@ -1,0 +1,33 @@
+# Secrets: never commit API keys
+.env
+.env.*
+!.env.example
+
+# Python dependencies and virtual environments
+.venv/
+venv/
+env/
+
+# Python build and cache files
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Node (the MCP Inspector, if run through npx locally)
+node_modules/
+
+# Runtime data written by the agent
+mcp_server/chat_app/messages.json
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store

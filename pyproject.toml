@@ -1,0 +1,16 @@
+[project]
+name = "ai-engineer-workshop"
+version = "0.1.0"
+description = "Hands-on workshop: build an AI agent with harness, tools, workflows, evals, MCP and RAG."
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic",
+    "fastmcp",
+    "fastembed",
+    "numpy",
+    "python-dotenv",
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
