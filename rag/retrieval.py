@@ -18,7 +18,9 @@ def cosine_similarity(query: np.ndarray, vectors: np.ndarray) -> np.ndarray:
 
 
 def search(store: VectorStore, query: str, k: int = 3) -> list[tuple[float, str]]:
-    raise NotImplementedError("Step 6.4 - see guide.md")
+    scores = cosine_similarity(embed_query(query), store.vectors)
+    best = np.argsort(scores)[::-1][:k]
+    return [(float(scores[i]), store.chunks[i]) for i in best]
 
 
 if __name__ == "__main__":
