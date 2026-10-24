@@ -1,8 +1,21 @@
-"""The Agent: a model, a system prompt, and tools from an MCP server.
+"""The Agent: a model, a system prompt, some tools, and a loop.
 
-On start we connect to the MCP server, ask which tools it has, and hand those
-definitions to Claude. Claude can now ASK for a tool (a `tool_use` block); we
-run it on the MCP server. Start the server first:  uv run python mcp_server/server.py
+    ┌──────────────────────────────────────────────────────────────┐
+    │  messages = [user message]                                   │
+    │  loop:                                                       │
+    │     response = claude(system, tools, messages)               │
+    │     messages += assistant response                           │
+    │     if no tool calls: done                                   │
+    │     run each tool (via MCP) → messages += tool results       │
+    └──────────────────────────────────────────────────────────────┘
+
+That's the whole "agent". Everything the model knows on each turn is in
+`messages` - watch it grow by running with verbose=True.
+
+Tools come from an MCP server over HTTP: on start we connect, ask the server
+which tools it has, and hand those definitions to Claude. When Claude asks to
+use a tool, we forward the call to the MCP server and return the result.
+Start the server first:  uv run python mcp_server/server.py
 """
 
 import json
@@ -49,28 +62,43 @@ class Agent:
         text = "\n".join(block.text for block in result.content if block.type == "text")
         return text, result.is_error
 
-    # ---- One call to Claude, with tools ----
+    # ---- The agentic loop ----
 
-    async def run(self, user_message: str) -> str:
+    async def run(self, user_message: str, max_turns: int = 10) -> str:
         self.messages.append({"role": "user", "content": user_message})
-        response = await self.client.messages.create(
-            model=MODEL,
-            max_tokens=16000,
-            system=self.system_prompt,
-            tools=self.tools,
-            messages=self.messages,
-        )
-        self.messages.append({"role": "assistant", "content": response.content})
-        self.log_turn(1, response)
 
-        # Run every tool Claude asked for. Claude never sees the results.
-        for block in response.content:
-            if block.type == "tool_use":
+        for turn in range(1, max_turns + 1):
+            response = await self.client.messages.create(
+                model=MODEL,
+                max_tokens=16000,
+                system=self.system_prompt,
+                tools=self.tools,
+                messages=self.messages,
+            )
+            # The assistant's reply (text + tool calls) becomes part of the context.
+            self.messages.append({"role": "assistant", "content": response.content})
+            self.log_turn(turn, response)
+
+            if response.stop_reason != "tool_use":
+                return "".join(b.text for b in response.content if b.type == "text")
+
+            # Run every tool Claude asked for, and send ALL results back in ONE message.
+            tool_results = []
+            for block in response.content:
+                if block.type != "tool_use":
+                    continue
                 output, is_error = await self.call_tool(block.name, block.input)
                 self.tool_calls.append({"name": block.name, "input": block.input, "output": output})
                 self.log(f"  🔧 {block.name}({json.dumps(block.input)})\n     → {output[:300]}")
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": output,
+                    "is_error": is_error,
+                })
+            self.messages.append({"role": "user", "content": tool_results})
 
-        return "".join(b.text for b in response.content if b.type == "text")
+        raise RuntimeError(f"{self.name} did not finish within {max_turns} turns")
 
     # ---- Logging: watch the context build up ----
 
