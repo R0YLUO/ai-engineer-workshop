@@ -14,7 +14,7 @@ from rag.embedding import VectorStore, build_vector_store, embed_query
 
 
 def cosine_similarity(query: np.ndarray, vectors: np.ndarray) -> np.ndarray:
-    raise NotImplementedError("Step 6.3 - see guide.md")
+    return (vectors @ query) / (np.linalg.norm(vectors, axis=1) * np.linalg.norm(query))
 
 
 def search(store: VectorStore, query: str, k: int = 3) -> list[tuple[float, str]]:
