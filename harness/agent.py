@@ -31,9 +31,16 @@ MCP_SERVER_URL = "http://127.0.0.1:8001/mcp"
 
 
 class Agent:
-    def __init__(self, name: str, system_prompt: str, verbose: bool = True):
+    def __init__(
+        self,
+        name: str,
+        system_prompt: str,
+        allowed_tools: list[str] | None = None,
+        verbose: bool = True,
+    ):
         self.name = name
         self.system_prompt = system_prompt
+        self.allowed_tools = allowed_tools  # None = every tool the MCP server offers
         self.verbose = verbose
 
         self.client = anthropic.AsyncAnthropic()
@@ -50,6 +57,7 @@ class Agent:
         self.tools = [
             {"name": t.name, "description": t.description, "input_schema": t.input_schema}
             for t in mcp_tools
+            if self.allowed_tools is None or t.name in self.allowed_tools
         ]
         self.log(f"Connected to MCP server. Tools: {[t['name'] for t in self.tools]}")
         return self

@@ -16,20 +16,24 @@ EMAILS = Path(__file__).parent.parent / "data" / "emails"
 
 CASES = {
     "dispute_acme.txt": {
+        "agent": "Dispute Agent",
         "tools": {"lookup_customer", "get_booking_details", "write_message"},
         # Contract says $2.50/km standard: 120 km × 2.50 = $300, not $480 (express rate was applied).
         "must_mention": ["INV-1042", "300", "480"],
     },
     "dispute_coastal.txt": {
+        "agent": "Dispute Agent",
         "tools": {"lookup_customer", "get_booking_details", "write_message"},
         # (80 km × 3.10 + 40 heavy item) × 0.9 = $259.20, the 10% discount was missing.
         "must_mention": ["INV-1051", "259.20", "10%"],
     },
     "enquiry_refrigerated.txt": {
+        "agent": "Enquiry Agent",
         "tools": {"write_message"},
         "must_mention": ["8°C", "log"],
     },
     "enquiry_cancellation.txt": {
+        "agent": "Enquiry Agent",
         "tools": {"write_message"},
         "must_mention": ["4 hours", "$35", "aerosol"],
     },
@@ -49,6 +53,11 @@ def posted_message(agent) -> str:
     messages = [call["input"]["message"] for call in agent.tool_calls if call["name"] == "write_message"]
     assert messages, "the agent did not post a message to the chat"
     return messages[0]
+
+
+@pytest.mark.parametrize("email", CASES)
+def test_routed_to_the_right_agent(agents, email):
+    assert agents[email].name == CASES[email]["agent"]
 
 
 @pytest.mark.parametrize("email", CASES)
