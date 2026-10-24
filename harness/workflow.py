@@ -29,5 +29,6 @@ If the data does not support the customer's claim, say so clearly in your findin
 async def handle_email(email: str, verbose: bool = True) -> Agent:
     """Handle one incoming email and return the agent that handled it."""
     agent = Agent("Dispute Agent", DISPUTE_AGENT_PROMPT, verbose=verbose)
-    await agent.run(f"A new email has arrived. Investigate it.\n\n<email>\n{email}\n</email>")
+    async with agent:  # connects to the MCP server and loads its tools
+        await agent.run(f"A new email has arrived. Investigate it.\n\n<email>\n{email}\n</email>")
     return agent
