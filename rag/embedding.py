@@ -29,11 +29,12 @@ def get_model() -> TextEmbedding:
 
 
 def embed_documents(texts: list[str]) -> np.ndarray:
-    raise NotImplementedError("Step 6.2 - see guide.md")
+    return np.array(list(get_model().passage_embed(texts)))
 
 
 def embed_query(text: str) -> np.ndarray:
-    raise NotImplementedError("Step 6.2 - see guide.md")
+    # Queries are embedded slightly differently from documents for this model.
+    return np.array(list(get_model().query_embed(text)))[0]
 
 
 class VectorStore:
@@ -42,12 +43,15 @@ class VectorStore:
         self.vectors = np.empty((0, 384))
 
     def add(self, chunks: list[str]) -> None:
-        raise NotImplementedError("Step 6.2 - see guide.md")
+        self.chunks.extend(chunks)
+        self.vectors = np.vstack([self.vectors, embed_documents(chunks)])
 
 
 def build_vector_store() -> VectorStore:
     """Load the service guide, chunk it, embed it, store it."""
-    raise NotImplementedError("Step 6.2 - see guide.md")
+    store = VectorStore()
+    store.add(chunk_document(DOCUMENT_PATH.read_text()))
+    return store
 
 
 if __name__ == "__main__":
