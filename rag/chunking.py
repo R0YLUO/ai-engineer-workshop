@@ -18,20 +18,7 @@ DOCUMENT_PATH = Path(__file__).parent.parent / "data" / "documents" / "service_g
 
 
 def chunk_document(text: str, max_chars: int = 800) -> list[str]:
-    chunks = []
-    for section in text.split("\n## ")[1:]:  # [0] is the document title
-        heading, _, body = section.partition("\n")
-        paragraphs = [p.strip() for p in body.split("\n\n") if p.strip()]
-
-        current = ""
-        for paragraph in paragraphs:
-            if current and len(current) + len(paragraph) > max_chars:
-                chunks.append(f"## {heading}\n{current.strip()}")
-                current = ""
-            current += paragraph + "\n\n"
-        if current:
-            chunks.append(f"## {heading}\n{current.strip()}")
-    return chunks
+    raise NotImplementedError("Step 6.1 - see guide.md")
 
 
 if __name__ == "__main__":

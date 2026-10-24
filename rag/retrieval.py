@@ -14,13 +14,11 @@ from rag.embedding import VectorStore, build_vector_store, embed_query
 
 
 def cosine_similarity(query: np.ndarray, vectors: np.ndarray) -> np.ndarray:
-    return (vectors @ query) / (np.linalg.norm(vectors, axis=1) * np.linalg.norm(query))
+    raise NotImplementedError("Step 6.3 - see guide.md")
 
 
 def search(store: VectorStore, query: str, k: int = 3) -> list[tuple[float, str]]:
-    scores = cosine_similarity(embed_query(query), store.vectors)
-    best = np.argsort(scores)[::-1][:k]
-    return [(float(scores[i]), store.chunks[i]) for i in best]
+    raise NotImplementedError("Step 6.4 - see guide.md")
 
 
 if __name__ == "__main__":
